@@ -1,0 +1,97 @@
+if(!exists("alternatives")) source("intro.R")
+
+library(shiny)
+
+shinyUI(fluidPage(
+
+    titlePanel("SMCE Tool for the SONGS Case Study"),
+
+    tabsetPanel(
+        tabPanel(
+            parameters$tabname[1],
+            br(),
+            p("Below are the criterion measures used for our analysis:"),
+            # textOutput("criteriaText"),
+            br(),
+            DT::dataTableOutput("criteria1"),
+            br(),
+            # textOutput("stdResText"),
+            p(paste("Using the mean values for all the criterion measures,",
+                    "we obtain the following alternative ranking:")),
+            br(),
+            tableOutput("standardResults1"),
+            br(),
+            # textOutput("mcResText"),
+            p(paste("To measure the robustness of the standard result,",
+                  "we sampled the values of our impact matrix", 
+                  parameters$n_sample[1],
+                  "different times.")),
+            downloadButton(outputId = "downloadPlot1", label = "Save plot"),
+            plotOutput("mcBoxplot1")
+        ),
+        
+        tabPanel(
+            parameters$tabname[2],
+            br(),
+            p("Below are the criterion measures used for our analysis:"),
+            # textOutput("criteriaText"),
+            br(),
+            DT::dataTableOutput("criteria2"),
+            br(),
+            # textOutput("stdResText"),
+            p(paste("Using the mean values for all the criterion measures,",
+                  "we obtain the following alternative ranking:")),
+            br(),
+            tableOutput("standardResults2"),
+            br(),
+            # textOutput("mcResText"),
+            p(paste("To measure the robustness of the standard result,",
+                    "we sampled the values of our impact matrix", 
+                    parameters$n_sample[2],
+                    "different times.")),            
+            downloadButton(outputId = "downloadPlot2", label = "Save plot"),
+            plotOutput("mcBoxplot2")
+        ),
+
+         tabPanel(
+            parameters$tabname[3],
+            br(),
+            p("Below are the criterion measures used for our analysis:"),
+            # textOutput("criteriaText"),
+            br(),
+            DT::dataTableOutput("criteria3"),
+            br(),
+            # textOutput("stdResText"),
+            p(paste("Using the mean values for all the criterion measures,",
+                  "we obtain the following alternative ranking:")),
+            br(),
+            tableOutput("standardResults3"),
+            br(),
+            # textOutput("mcResText"),
+            p(paste("To measure the robustness of the standard result,",
+                    "we sampled the values of our impact matrix", 
+                    parameters$n_sample[3],
+                    "different times.")),            
+            downloadButton(outputId = "downloadPlot3", label = "Save plot"),
+            plotOutput("mcBoxplot3")
+        ),
+               
+        tabPanel(
+            "Stakeholders",
+            br(),
+            DT::dataTableOutput("stakeholderTable"),
+            br(),
+            textOutput("actorText"),
+            br(),
+            DT::dataTableOutput("actorTable", width = "75%"),
+            plotOutput("actorDendrogram"),
+            br(),
+            textOutput("stakeholderText"),
+            br(),
+            actionButton("updateSocialRank", "Get Rankings"),
+            br(),
+            tableOutput("socialRank")
+            # plotlyOutput("stakeholderMap"),
+        )
+    )
+))
