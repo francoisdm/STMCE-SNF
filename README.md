@@ -1,5 +1,5 @@
 # STMCE Tool for SNF Management
-R Shiny application to carry out social multi-criteria evaluation (SMCE) on the SONGS nuclear waste situation
+R Shiny application to perform socio-technical multi-criteria evaluation (STMCE) of scenarios for spent fuel management
 
 Useful links:
 https://shiny.rstudio.com/gallery/
