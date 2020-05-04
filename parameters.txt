@@ -1,3 +1,3 @@
-input-TECH-v2.xlsx,100,Technical_view
-input-SOC-v2.xlsx,100,Societal_view
-input-FULL-v2.xlsx,100,Combined
+input-TECH-v2.xlsx,500,Technical_view
+input-SOC-v2.xlsx,500,Societal_view
+input-FULL-v2.xlsx,500,Combined
