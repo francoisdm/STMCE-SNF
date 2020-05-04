@@ -1,9 +1,8 @@
 # TO-DO:
-# 1. make changes to stakeholder UI (cutoff at 50 Stake)
-# 2. account for tertiary variables
-# 3. ranking with no weights considered (all)
-# 4. ranking with weights considered (all)
-# 5. ranking by dendrogram groups (filtered by stake)
+# 1. account for tertiary variables
+# 2. ranking with no weights considered (all)
+# 3. ranking with weights considered (all)
+# 4. ranking by dendrogram groups (filtered by stake)
 
 # ====== Packages ======
 required_packages <- c("crosstalk",
@@ -343,19 +342,22 @@ tryCatch(
     simulations <- lapply(filenames, function(i) list(ranking=readr::read_csv(i)))
   },
   error=function(cond) {
-    simulations <- lapply(1:N, function(i) simulateMC(parameters$n_sample[i], 
-                                                      impactMatrix[[i]],
-                                                      criteria[[i]]))
-
-    # Store simulation results in CSV
-    for (i in 1:length(simulations)) {
-      readr::write_csv(
-        simulations[[i]]$ranking,
-        paste0(parameters$tabname[i], "_MC_results", parameters$n_sample[i], ".csv")
-      )
-    }
+    
   }
 )
+
+if (is.na(simulations)) {
+  simulations <- lapply(1:N, function(i) simulateMC(parameters$n_sample[i], 
+                                                    impactMatrix[[i]],
+                                                    criteria[[i]]))
+  # Store simulation results in CSV
+  for (i in 1:length(simulations)) {
+    readr::write_csv(
+      simulations[[i]]$ranking,
+      paste0(parameters$tabname[i], "_MC_results", parameters$n_sample[i], ".csv")
+    )
+  }
+}
 
 # simulations <- lapply(1:N, function(i) simulateMC(10, # Number of samples (before: paramaters$n_sample[i])
 #                                                   impactMatrix[[i]],
@@ -366,13 +368,13 @@ tryCatch(
 # ====== Social ======
 rankOptions <- c("Very bad", "Bad", "More or less bad", "Moderate",
                  "More or less good", "Good", "Very good")
-nActors <- nrow(actorTable)
-actorPrefs <- actorTable %>%
-  dplyr::select(-ID, -Stakeholder) %>%
-  split(seq(nActors)) %>%
-  setNames(stakeholders$ID)
-
-impactSocial <- matrix(nrow = nActors, ncol = nActors)
+# nActors <- nrow(actorTable)
+# actorPrefs <- actorTable %>%
+#   dplyr::select(-ID, -Stakeholder) %>%
+#   split(seq(nActors)) %>%
+#   setNames(stakeholders$ID)
+# 
+# impactSocial <- matrix(nrow = nActors, ncol = nActors)
 linguisticOrder <- list(
   "Very bad" = 1,
   "Bad" = 2,
@@ -440,17 +442,17 @@ lvParams$k <- sapply(1:nrow(lvParams),
                                                             lower = lower[i], 
                                                             upper = upper[i])$value))
 
-# Make pairwise comparisons
-for (i in 1:nActors) {
-  for (j in i:nActors) {
-    a <- actorPrefs[[i]]
-    b <- actorPrefs[[j]]
-    d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
-    s <- 1/(1 + d)
-    impactSocial[i, j] <- s
-    impactSocial[j, i] <- s
-  }
-}
+# # Make pairwise comparisons
+# for (i in 1:nActors) {
+#   for (j in i:nActors) {
+#     a <- actorPrefs[[i]]
+#     b <- actorPrefs[[j]]
+#     d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
+#     s <- 1/(1 + d)
+#     impactSocial[i, j] <- s
+#     impactSocial[j, i] <- s
+#   }
+# }
 
 # actorTable <- data.frame(Actor = stakeholders$ID) %>%
 #   cbind(data.frame(do.call('rbind', actorPrefs)))

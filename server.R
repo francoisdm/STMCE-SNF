@@ -111,60 +111,95 @@ shinyServer(function(input, output) {
 
     # ==== Actor dendogram ====
     output$actorText <- renderText({
-        paste("Using actor preferences on the alternatives, we group actors together by",
-              "computing the semantic distance between pairwise preferences.",
-              "Note that actor preferences for now have been randomly generated.")
+        paste("By pressing the button below, we will generate a dendrogram of high stakes actors",
+              "according to their alternative preferences. In addition, we will generate a ranking",
+              "of alternatives based on high stakes actors preferences and their corresponding weights.",
+              "Note that it might take a couple of minutes to run the analysis.")
+    })
+    
+    highStakeActors <- eventReactive(input$updateSocialRank, {
+        ids <- r$stakeholders %>%
+            filter(`Interest/Stake` > 50) %>%
+            .$ID
+        actorTable %>%
+            filter(ID %in% ids)
     })
     
     output$actorTable <- DT::renderDataTable({
-        DT::datatable(actorTable,
+        # print(highStakeActors)
+        DT::datatable(highStakeActors(),
                       options = list(pageLength = 40,
-                                     dom = 't'),
+                                     dom = 't',
+                                     columnDefs=list(list(visible=F,targets=c(0)))),
                       rownames = FALSE,
                       editable = F)
     })
     
+    impactSocial <- eventReactive(input$updateSocialRank, {
+        highStakeActors <- highStakeActors()
+        nActors <- nrow(highStakeActors)
+        actorPrefs <- highStakeActors %>%
+            dplyr::select(-ID, -Stakeholder) %>%
+            split(seq(nActors)) #%>%
+            # setNames(highStakeActors$ID)
+        
+        impactSocial <- matrix(nrow = nActors, ncol = nActors)        
+        # Make pairwise comparisons
+        for (i in 1:nActors) {
+            for (j in i:nActors) {
+                a <- actorPrefs[[i]]
+                b <- actorPrefs[[j]]
+                d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
+                s <- 1/(1 + d)
+                impactSocial[i, j] <- s
+                impactSocial[j, i] <- s
+            }
+        }
+        impactSocial
+    })
+    
     output$actorDendrogram <- renderPlot({
         # rownames(impactSocial) <- actorTable$Stakeholder
+        impactSocial <- impactSocial()
         hc <- hclust(as.dist(impactSocial), method="complete")
         plot(hc, xlab="Actor ID")
     })    
     
-    observeEvent(input$addSocialActor, {
-        showModal(modalDialog(
-            textInput(inputId = "actorNameInput", label = "Actor Name", placeholder = "Name of social actor"),
-            selectInput(inputId = "bauInput", label = "BAU Rank", choices = rankOptions),
-            selectInput(inputId = "interimInput", label = "INTERIM Rank", choices = rankOptions),
-            selectInput(inputId = "directInput", label = "DIRECT Rank", choices = rankOptions),
-            selectInput(inputId = "indirectInput", label = "INDIRECT Rank", choices = rankOptions),
-            title = "Add Social Actor",
-            footer = tagList(
-                actionButton("saveSocialActor", "Save"),
-                modalButton("Cancel")
-            ),
-            easyClose = FALSE
-        ))
-    })
-    
-    observeEvent(input$saveSocialActor, {
-        req(input$actorNameInput)
-        
-        actor <- input$actorNameInput
-        bau <- input$bauInput
-        interim <- input$interimInput
-        direct <- input$directInput
-        indirect <- input$indirectInput
-        
-        r$actorTable <- r$actorTable %>%
-            rbind(data.frame(
-                Actor = actor, 
-                X1 = bau, 
-                X2 = interim, 
-                X3 = direct, 
-                X4 = indirect))
-        
-        removeModal()
-    })    
+    # observeEvent(input$addSocialActor, {
+    #     showModal(modalDialog(
+    #         textInput(inputId = "actorNameInput", label = "Actor Name", placeholder = "Name of social actor"),
+    #         selectInput(inputId = "bauInput", label = "BAU Rank", choices = rankOptions),
+    #         selectInput(inputId = "interimInput", label = "INTERIM Rank", choices = rankOptions),
+    #         selectInput(inputId = "directInput", label = "DIRECT Rank", choices = rankOptions),
+    #         selectInput(inputId = "indirectInput", label = "INDIRECT Rank", choices = rankOptions),
+    #         title = "Add Social Actor",
+    #         footer = tagList(
+    #             actionButton("saveSocialActor", "Save"),
+    #             modalButton("Cancel")
+    #         ),
+    #         easyClose = FALSE
+    #     ))
+    # })
+    # 
+    # observeEvent(input$saveSocialActor, {
+    #     req(input$actorNameInput)
+    #     
+    #     actor <- input$actorNameInput
+    #     bau <- input$bauInput
+    #     interim <- input$interimInput
+    #     direct <- input$directInput
+    #     indirect <- input$indirectInput
+    #     
+    #     r$actorTable <- r$actorTable %>%
+    #         rbind(data.frame(
+    #             Actor = actor, 
+    #             X1 = bau, 
+    #             X2 = interim, 
+    #             X3 = direct, 
+    #             X4 = indirect))
+    #     
+    #     removeModal()
+    # })    
     
     # ====== Stakeholder mapping ======   
     output$stakeholderText <- renderText({
@@ -194,7 +229,7 @@ shinyServer(function(input, output) {
     }        
     
     E <- eventReactive(input$updateSocialRank,{
-        add(lapply(1:nrow(r$actorTable), getActorImpact))
+        add(lapply(1:nrow(r$stakeholders), getActorImpact))
     })
     
     output$socialRank <- renderTable({
@@ -209,63 +244,63 @@ shinyServer(function(input, output) {
     })
     
     # Interactive stakeholder map
-    output$stakeholderMap <- renderPlotly({
-        
-        xa <- list(title="Influence/Power",
-                   range=c(0,100),
-                   fixedrange=T,
-                   showticklabels=F)        
-        ya <- list(title="Interest/Stake",
-                   range=c(0, 100),
-                   fixedrange=T,
-                   showticklabels=F)
-        
-        circles <- map2(
-            r$stakeholders$`Influence/Power`, 
-            r$stakeholders$`Interest/Stake`, 
-            ~list(
-                type = "circle",
-                # anchor circles at (x, y)
-                xanchor = .x,
-                yanchor = .y,
-                # give each circle a 2 pixel diameter
-                x0 = -3, x1 = 3,
-                y0 = -3, y1 = 3,
-                xsizemode = "pixel", 
-                ysizemode = "pixel",
-                # other visual properties
-                fillcolor = "blue",
-                line = list(color = "transparent")
-            )
-        )
-        
-        plot_ly() %>%
-            add_trace(
-                type="scatter",
-                x=~r$stakeholders$`Influence/Power`,
-                y=~r$stakeholders$`Interest/Stake`,
-                mode="text",
-                text=~r$stakeholders$ID,
-                textposition="middle right"
-            ) %>%
-            layout(title="Stakeholder Map",
-                   xaxis=xa,
-                   yaxis=ya,
-                   shapes = circles) %>%
-            config(edits = list(shapePosition = TRUE),
-                   displayModeBar=F)
-    })
+    # output$stakeholderMap <- renderPlotly({
+    #     
+    #     xa <- list(title="Influence/Power",
+    #                range=c(0,100),
+    #                fixedrange=T,
+    #                showticklabels=F)        
+    #     ya <- list(title="Interest/Stake",
+    #                range=c(0, 100),
+    #                fixedrange=T,
+    #                showticklabels=F)
+    #     
+    #     circles <- map2(
+    #         r$stakeholders$`Influence/Power`, 
+    #         r$stakeholders$`Interest/Stake`, 
+    #         ~list(
+    #             type = "circle",
+    #             # anchor circles at (x, y)
+    #             xanchor = .x,
+    #             yanchor = .y,
+    #             # give each circle a 2 pixel diameter
+    #             x0 = -3, x1 = 3,
+    #             y0 = -3, y1 = 3,
+    #             xsizemode = "pixel", 
+    #             ysizemode = "pixel",
+    #             # other visual properties
+    #             fillcolor = "blue",
+    #             line = list(color = "transparent")
+    #         )
+    #     )
+    #     
+    #     plot_ly() %>%
+    #         add_trace(
+    #             type="scatter",
+    #             x=~r$stakeholders$`Influence/Power`,
+    #             y=~r$stakeholders$`Interest/Stake`,
+    #             mode="text",
+    #             text=~r$stakeholders$ID,
+    #             textposition="middle right"
+    #         ) %>%
+    #         layout(title="Stakeholder Map",
+    #                xaxis=xa,
+    #                yaxis=ya,
+    #                shapes = circles) %>%
+    #         config(edits = list(shapePosition = TRUE),
+    #                displayModeBar=F)
+    # })
     
     # Update actor weights after making edits to stakeholder map
-    observeEvent(event_data("plotly_relayout"), {
-        event <- event_data("plotly_relayout")
-        if (!is.null(event) & all(grepl("anchor", names(event)))) {
-            rownum <- parse_number(names(event)[1]) + 1
-            newCoord <- sapply(5*round(as.numeric(event)/5), max, 0)
-            r$stakeholders$`Influence/Power`[rownum] <- newCoord[1]
-            r$stakeholders$`Interest/Stake`[rownum] <- newCoord[2]
-        }
-    })
+    # observeEvent(event_data("plotly_relayout"), {
+    #     event <- event_data("plotly_relayout")
+    #     if (!is.null(event) & all(grepl("anchor", names(event)))) {
+    #         rownum <- parse_number(names(event)[1]) + 1
+    #         newCoord <- sapply(5*round(as.numeric(event)/5), max, 0)
+    #         r$stakeholders$`Influence/Power`[rownum] <- newCoord[1]
+    #         r$stakeholders$`Interest/Stake`[rownum] <- newCoord[2]
+    #     }
+    # })
     
     # Show table of actors
     getWeight <- function(a) {
@@ -286,23 +321,15 @@ shinyServer(function(input, output) {
                          mutate(weight = round(weight, 2)),
                       rownames=F,
                       editable="cell",
-                      # editable=list(
-                      #     target="row",
-                      #     disable=list(columns=c(1,4))
-                      # ),
                       options=list(
                           pageLength=20,
-                          # dom='t',
-                          columnDefs=list(list(visible=F,targets=c(0)))
+                          columnDefs=list(list(visible=F,targets=c(0, 4)))
                       ))
     })
-    # observe(str(input$stakeholderTable_cell_edit))
     
     observeEvent(input$stakeholderTable_cell_edit, {
         info <- input$stakeholderTable_cell_edit
         r$stakeholders[info$row, (info$col+1)] <- as.numeric(info$value)
-        print(r$stakeholders)
-        # str(info)
     })
 
 })

@@ -83,13 +83,13 @@ shinyUI(fluidPage(
             br(),
             textOutput("actorText"),
             br(),
+            actionButton("updateSocialRank", "Run Analysis"),
+            br(),
             DT::dataTableOutput("actorTable", width = "75%"),
             plotOutput("actorDendrogram"),
             br(),
-            textOutput("stakeholderText"),
-            br(),
-            actionButton("updateSocialRank", "Get Rankings"),
-            br(),
+            # textOutput("stakeholderText"),
+            # br(),
             tableOutput("socialRank")
             # plotlyOutput("stakeholderMap"),
         )
