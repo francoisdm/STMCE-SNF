@@ -119,7 +119,8 @@ shinyServer(function(input, output) {
     
     highStakeActors <- eventReactive(input$updateSocialRank, {
         ids <- r$stakeholders %>%
-            filter(`Interest/Stake` > 50) %>%
+#            filter(`Interest/Stake` > 50) %>%
+            filter(`Interest/Stake` > 0) %>%
             .$ID
         actorTable %>%
             filter(ID %in% ids)

@@ -131,12 +131,12 @@ getImpactMatrix <- function(i) {
 }
 impactMatrix <- lapply(1:N, getImpactMatrix)
 
-stakeholders <- readxl::read_excel(path = 'stakeholders.xlsx',
-                                   range = 'A3:D17') %>%
+stakeholders <- readxl::read_excel(path = 'stakeholders-v2.xlsx',
+                                   range = 'A3:D23') %>%
   dplyr::rename(ID = `Stakeholder Abbreviation`)
 
-actorTable <- readxl::read_excel(path = 'equity-impact.xlsx',
-                                 range = 'A3:J17') %>%
+actorTable <- readxl::read_excel(path = 'equity-impact-v2.xlsx',
+                                 range = 'A3:J23') %>%
   dplyr::rename(Stakeholder = `Socio-economic actor`)
 
 
