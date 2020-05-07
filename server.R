@@ -209,7 +209,7 @@ shinyServer(function(input, output) {
     })
     
     # Get ranking
-    getActorImpact <- function(i) {
+    getActorImpact <- function(i, weight=T) {
         prefs <- r$actorTable[i,] %>%
             select(-ID, -Stakeholder)
         
@@ -226,11 +226,19 @@ shinyServer(function(input, output) {
             E[i,] <- p
             E[i,i] <- 0
         }
-        E*r$stakeholders$weight[i]
+        if (weight) {
+            E*r$stakeholders$weight[i]
+        } else {
+            E
+        }
     }        
     
     E <- eventReactive(input$updateSocialRank,{
         add(lapply(1:nrow(r$stakeholders), getActorImpact))
+    })
+    
+    E2 <- eventReactive(input$updateSocialRank,{
+        add(lapply(1:nrow(r$stakeholders), getActorImpact, weight=FALSE))
     })
     
     output$socialRank <- renderTable({
@@ -243,6 +251,17 @@ shinyServer(function(input, output) {
             data.frame %>%
             t
     })
+    
+    output$socialRank_noWeight <- renderTable({
+        E2 <- E2()
+        -E2 %>%
+            t %>%
+            colSums %>%
+            rank %>%
+            as.factor %>%
+            data.frame %>%
+            t
+    })    
     
     # Interactive stakeholder map
     # output$stakeholderMap <- renderPlotly({

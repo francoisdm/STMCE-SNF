@@ -90,7 +90,8 @@ shinyUI(fluidPage(
             br(),
             # textOutput("stakeholderText"),
             # br(),
-            tableOutput("socialRank")
+            tableOutput("socialRank"),
+            tableOutput("socialRank_noWeight")
             # plotlyOutput("stakeholderMap"),
         )
     )

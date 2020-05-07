@@ -1,8 +1,5 @@
 # TO-DO:
-# 1. account for tertiary variables
-# 2. ranking with no weights considered (all)
-# 3. ranking with weights considered (all)
-# 4. ranking by dendrogram groups (filtered by stake)
+# 4. ranking by dendrogram groups -> use cutree function
 
 # ====== Packages ======
 required_packages <- c("crosstalk",
@@ -310,10 +307,15 @@ simulateMC <- function(n, impact_mat, crit, mean = F, corr = T) {
     } else {
       Value <- sapply(1:nrow(impact_mat), 
                        function(i) rnorm(1, mean = impact_mat$mean[i], sd = impact_mat$stdDev[i]))
-      Value <- ifelse(impact_mat$Binary, 
+      
+      Value <- ifelse(impact_mat$Binary,
                       ifelse(abs(Value - impact_mat$min) < abs(Value - impact_mat$max),
-                             impact_mat$min,
-                             impact_mat$max),
+                             ifelse(abs(Value - impact_mat$min) < abs(Value - impact_mat$mean),
+                                    impact_mat$min,
+                                    impact_mat$mean),
+                             ifelse(abs(Value - impact_mat$max) < abs(Value - impact_mat$mean),
+                                    impact_mat$max,
+                                    impact_mat$mean)),
                       Value)
       if (corr) {
         Value <- adjustValues(Value, impact_mat)
