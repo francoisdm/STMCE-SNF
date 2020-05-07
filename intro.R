@@ -1,5 +1,5 @@
 # TO-DO:
-# 4. ranking by dendrogram groups -> use cutree function
+# 4. ranking by dendrogram groups -> use cutree function -> ask for number of groups
 
 # ====== Packages ======
 required_packages <- c("crosstalk",
@@ -136,6 +136,13 @@ actorTable <- readxl::read_excel(path = 'equity-impact-v2.xlsx',
                                  range = 'A3:J23') %>%
   dplyr::rename(Stakeholder = `Socio-economic actor`)
 
+impactSocial <- NULL
+tryCatch({impactSocial <- read_csv("social-impact.csv", col_names=F)},
+         error=function(cond) {})
+if (!is.null(impactSocial)) {
+  impactSocial <- as.matrix(impactSocial)
+  colnames(impactSocial) <- as.character(1:nrow(impactSocial))
+}
 
 # ====== Technical ======
 createOutrankingMatrix <- function(impact_mat) {
@@ -334,7 +341,7 @@ simulateMC <- function(n, impact_mat, crit, mean = F, corr = T) {
        ranking = historicRankings)
 }
 
-simulations <- NA
+simulations <- NULL
 tryCatch(
   {
     filenames <- c(paste0("Technical_view_MC_results", parameters$n_sample[1], ".csv"),
@@ -348,7 +355,7 @@ tryCatch(
   }
 )
 
-if (is.na(simulations)) {
+if (is.null(simulations)) {
   simulations <- lapply(1:N, function(i) simulateMC(parameters$n_sample[i], 
                                                     impactMatrix[[i]],
                                                     criteria[[i]]))

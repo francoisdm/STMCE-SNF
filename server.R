@@ -130,21 +130,21 @@ shinyServer(function(input, output) {
         # print(highStakeActors)
         DT::datatable(highStakeActors(),
                       options = list(pageLength = 40,
-                                     dom = 't',
-                                     columnDefs=list(list(visible=F,targets=c(0)))),
+                                     dom = 't'),
+                                     #columnDefs=list(list(visible=F,targets=c(0)))),
                       rownames = FALSE,
                       editable = F)
     })
     
-    impactSocial <- eventReactive(input$updateSocialRank, {
+    getImpactSocial <- function() {
         highStakeActors <- highStakeActors()
         nActors <- nrow(highStakeActors)
         actorPrefs <- highStakeActors %>%
             dplyr::select(-ID, -Stakeholder) %>%
             split(seq(nActors)) #%>%
-            # setNames(highStakeActors$ID)
+        # setNames(highStakeActors$ID)
         
-        impactSocial <- matrix(nrow = nActors, ncol = nActors)        
+        impactSoc <- matrix(nrow = nActors, ncol = nActors)        
         # Make pairwise comparisons
         for (i in 1:nActors) {
             for (j in i:nActors) {
@@ -152,17 +152,53 @@ shinyServer(function(input, output) {
                 b <- actorPrefs[[j]]
                 d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
                 s <- 1/(1 + d)
-                impactSocial[i, j] <- s
-                impactSocial[j, i] <- s
+                impactSoc[i, j] <- s
+                impactSoc[j, i] <- s
             }
         }
-        impactSocial
+        impactSoc
+    }
+    
+    # impactSocial <- eventReactive(input$updateSocialRank, {
+    #     highStakeActors <- highStakeActors()
+    #     nActors <- nrow(highStakeActors)
+    #     actorPrefs <- highStakeActors %>%
+    #         dplyr::select(-ID, -Stakeholder) %>%
+    #         split(seq(nActors)) #%>%
+    #         # setNames(highStakeActors$ID)
+    #     
+    #     impactSocial <- matrix(nrow = nActors, ncol = nActors)        
+    #     # Make pairwise comparisons
+    #     for (i in 1:nActors) {
+    #         for (j in i:nActors) {
+    #             a <- actorPrefs[[i]]
+    #             b <- actorPrefs[[j]]
+    #             d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
+    #             s <- 1/(1 + d)
+    #             impactSocial[i, j] <- s
+    #             impactSocial[j, i] <- s
+    #         }
+    #     }
+    #     impactSocial
+    # })
+    
+    impactSoc <- eventReactive(input$updateSocialRank, {
+        if (is.null(impactSocial)) {
+            impactSoc <- getImpactSocial()
+            write_csv(data.frame(impactSoc), "social-impact.csv", col_names=F)
+        } else {
+            impactSoc <- impactSocial
+        }
+        impactSoc
     })
     
     output$actorDendrogram <- renderPlot({
         # rownames(impactSocial) <- actorTable$Stakeholder
-        impactSocial <- impactSocial()
-        hc <- hclust(as.dist(impactSocial), method="complete")
+        # if (is.na(impactSocial)) {
+        #     impactSocial <- impactSocial()
+        #     write_csv(data.frame(impactSocial), "social-impact.csv", col_names=F)
+        # }
+        hc <- hclust(as.dist(1 - impactSoc()), method="complete")
         plot(hc, xlab="Actor ID")
     })    
     
