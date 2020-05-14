@@ -1,5 +1,7 @@
 if(!exists("alternatives")) source("intro.R")
 
+# Necessary script to keep track of when the return button
+# is pressed.
 js <- '
 $(document).on("keyup", function(e) {
   if(e.keyCode == 13){
@@ -8,109 +10,100 @@ $(document).on("keyup", function(e) {
 });
 '
 
+# Text that are repeatedly used in the multi-criteria analysis tabs.
+criteriaText <- "Below are the criterion measures used for our analysis:"
+stdResText <- paste("Using the mean values for all the criterion measures",
+                    "we obtain the following ranking:")
+mcResText <- paste("To measure the robustness of the results above,",
+                   "we sampled the values of our impact matrix",
+                   parameters$n_sample, "times:")
+# Text used in the stakeholder tab.
+analysisText <- paste("Pressing the button below will generate a dendrogram of stakeholders",
+                      "according to their alternative preferences. It will also generate",
+                      "3 different tables of rankings: one where all stakeholders are considered",
+                      "equal, one where the stakeholders' interest is taken into account, and",
+                      "one that examines preferences by coalition (as determined by the dendrogram).")
+shRankText_w <- "Ranking with stakeholder interest/stake as weights:"
+shRankText_ew <- "Ranking with equal weights:"
+
 shinyUI(fluidPage(
   
     useShinyjs(),
-    
     tags$script(js),
 
     titlePanel("SMCE Tool for the SONGS Case Study"),
 
     tabsetPanel(
-        tabPanel(
-            parameters$tabname[1],
-            br(),
-            p("Below are the criterion measures used for our analysis:"),
-            # textOutput("criteriaText"),
-            br(),
-            DT::dataTableOutput("criteria1"),
-            br(),
-            # textOutput("stdResText"),
-            p(paste("Using the mean values for all the criterion measures,",
-                    "we obtain the following alternative ranking:")),
-            br(),
-            tableOutput("standardResults1"),
-            br(),
-            # textOutput("mcResText"),
-            p(paste("To measure the robustness of the standard result,",
-                  "we sampled the values of our impact matrix", 
-                  parameters$n_sample[1],
-                  "different times.")),
-            downloadButton(outputId = "downloadPlot1", label = "Save plot"),
-            plotOutput("mcBoxplot1")
-        ),
+      tabPanel(
+        parameters$tabname[1],
+        br(),
+        p(criteriaText),
+        br(),
+        DT::dataTableOutput("criteria1"),
+        br(),
+        p(stdResText),
+        br(),
+        tableOutput("stdRes1"),
+        br(),
+        p(mcResText[1]),
+        downloadButton(outputId = "savePlot1", label = "Save plot"),
+        plotOutput("mcBoxplot1")
+      ),
         
-        tabPanel(
-            parameters$tabname[2],
-            br(),
-            p("Below are the criterion measures used for our analysis:"),
-            # textOutput("criteriaText"),
-            br(),
-            DT::dataTableOutput("criteria2"),
-            br(),
-            # textOutput("stdResText"),
-            p(paste("Using the mean values for all the criterion measures,",
-                  "we obtain the following alternative ranking:")),
-            br(),
-            tableOutput("standardResults2"),
-            br(),
-            # textOutput("mcResText"),
-            p(paste("To measure the robustness of the standard result,",
-                    "we sampled the values of our impact matrix", 
-                    parameters$n_sample[2],
-                    "different times.")),            
-            downloadButton(outputId = "downloadPlot2", label = "Save plot"),
-            plotOutput("mcBoxplot2")
-        ),
-
-         tabPanel(
-            parameters$tabname[3],
-            br(),
-            p("Below are the criterion measures used for our analysis:"),
-            # textOutput("criteriaText"),
-            br(),
-            DT::dataTableOutput("criteria3"),
-            br(),
-            # textOutput("stdResText"),
-            p(paste("Using the mean values for all the criterion measures,",
-                  "we obtain the following alternative ranking:")),
-            br(),
-            tableOutput("standardResults3"),
-            br(),
-            # textOutput("mcResText"),
-            p(paste("To measure the robustness of the standard result,",
-                    "we sampled the values of our impact matrix", 
-                    parameters$n_sample[3],
-                    "different times.")),            
-            downloadButton(outputId = "downloadPlot3", label = "Save plot"),
-            plotOutput("mcBoxplot3")
-        ),
+      tabPanel(
+        parameters$tabname[2],
+        br(),
+        p(criteriaText),
+        br(),
+        DT::dataTableOutput("criteria2"),
+        br(),
+        p(stdResText),
+        br(),
+        tableOutput("stdRes2"),
+        br(),
+        p(mcResText[2]),            
+        downloadButton(outputId = "savePlot2", label = "Save plot"),
+        plotOutput("mcBoxplot2")
+      ),
+      
+      tabPanel(
+        parameters$tabname[3],
+        br(),
+        p(criteriaText),
+        br(),
+        DT::dataTableOutput("criteria3"),
+        br(),
+        p(stdResText),
+        br(),
+        tableOutput("stdRes3"),
+        br(),
+        p(mcResText[3]),            
+        downloadButton(outputId = "savePlot3", label = "Save plot"),
+        plotOutput("mcBoxplot3")
+      ),
                
-        tabPanel(
-            "Stakeholders",
-            br(),
-            DT::dataTableOutput("stakeholderTable"),
-            br(),
-            textOutput("actorText"),
-            br(),
-            actionButton("updateSocialRank", "Run Analysis"),
-            br(),
-            DT::dataTableOutput("actorTable", width = "75%"),
-            plotOutput("actorDendrogram"),
-            br(),
-            # textOutput("stakeholderText"),
-            # br(),
-            textOutput("socialRankText"),
-            tableOutput("socialRank"),
-            textOutput("socialRank_noWeightText"),
-            tableOutput("socialRank_noWeight"),
-            shinyjs::hidden(
-              textInput("dendrogramGroups",
-                        label="Enter number of groups in dendrogram to analyze:")
-            ),
-            htmlOutput("groupText"),
-            tableOutput("socialRank_groups")
-            # plotlyOutput("stakeholderMap"),
-        )
+      tabPanel(
+        "Stakeholders",
+        br(),
+        DT::dataTableOutput("shTable"),
+        br(),
+        p(analysisText),
+        br(),
+        actionButton("runShAnalysis", "Run Analysis"),
+        br(),
+        plotOutput("shDendrogram"),
+        br(),
+        hidden(p(id="shRankText_w", shRankText_w)),
+        tableOutput("shRank_w"),
+        hidden(p(id="shRankText_ew", shRankText_ew)),
+        tableOutput("shRank_ew"),
+        hidden(
+          textInput("dendrogramGroups",
+                    label="Enter number of groups in dendrogram to analyze:")
+        ),
+        htmlOutput("groupText"),
+        tableOutput("socialRank_groups")
+        # plotlyOutput("stakeholderMap"),
+      )
     )
 ))
