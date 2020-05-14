@@ -97,7 +97,7 @@ shinyServer(function(input, output) {
     
     socImpact <- eventReactive(input$runShAnalysis, {
         if (is.null(socialImpact)) {
-            impactSoc <- getSocialImpact()
+            socImpact <- getSocialImpact()
             write_csv(data.frame(socImpact), "social-impact.csv", col_names=F)
         } else {
             socImpact <- socialImpact
