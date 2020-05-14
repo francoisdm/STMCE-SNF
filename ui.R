@@ -1,8 +1,18 @@
 if(!exists("alternatives")) source("intro.R")
 
-library(shiny)
+js <- '
+$(document).on("keyup", function(e) {
+  if(e.keyCode == 13){
+    Shiny.onInputChange("keyPressed", Math.random());
+  }
+});
+'
 
 shinyUI(fluidPage(
+  
+    useShinyjs(),
+    
+    tags$script(js),
 
     titlePanel("SMCE Tool for the SONGS Case Study"),
 
@@ -90,8 +100,16 @@ shinyUI(fluidPage(
             br(),
             # textOutput("stakeholderText"),
             # br(),
+            textOutput("socialRankText"),
             tableOutput("socialRank"),
-            tableOutput("socialRank_noWeight")
+            textOutput("socialRank_noWeightText"),
+            tableOutput("socialRank_noWeight"),
+            shinyjs::hidden(
+              textInput("dendrogramGroups",
+                        label="Enter number of groups in dendrogram to analyze:")
+            ),
+            htmlOutput("groupText"),
+            tableOutput("socialRank_groups")
             # plotlyOutput("stakeholderMap"),
         )
     )

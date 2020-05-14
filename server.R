@@ -1,11 +1,9 @@
-library(shiny)
-
 shinyServer(function(input, output) {
     
     # ==== Reactive values ====
     r <- reactiveValues()
-    r$nActors <- reactive({nrow(r$actorTable)})
-    r$actorTable <- actorTable
+    r$nActors <- reactive({nrow(r$equityImpact)})
+    r$equityImpact <- equityImpact
     r$stakeholders <- stakeholders %>%
         rename(`Influence/Power` = y,
                `Interest/Stake` = x)
@@ -122,11 +120,11 @@ shinyServer(function(input, output) {
 #            filter(`Interest/Stake` > 50) %>%
             filter(`Interest/Stake` > 0) %>%
             .$ID
-        actorTable %>%
+        equityImpact %>%
             filter(ID %in% ids)
     })
     
-    output$actorTable <- DT::renderDataTable({
+    output$equityImpact <- DT::renderDataTable({
         # print(highStakeActors)
         DT::datatable(highStakeActors(),
                       options = list(pageLength = 40,
@@ -159,7 +157,7 @@ shinyServer(function(input, output) {
         impactSoc
     }
     
-    # impactSocial <- eventReactive(input$updateSocialRank, {
+    # socialImpact <- eventReactive(input$updateSocialRank, {
     #     highStakeActors <- highStakeActors()
     #     nActors <- nrow(highStakeActors)
     #     actorPrefs <- highStakeActors %>%
@@ -167,7 +165,7 @@ shinyServer(function(input, output) {
     #         split(seq(nActors)) #%>%
     #         # setNames(highStakeActors$ID)
     #     
-    #     impactSocial <- matrix(nrow = nActors, ncol = nActors)        
+    #     socialImpact <- matrix(nrow = nActors, ncol = nActors)        
     #     # Make pairwise comparisons
     #     for (i in 1:nActors) {
     #         for (j in i:nActors) {
@@ -175,31 +173,31 @@ shinyServer(function(input, output) {
     #             b <- actorPrefs[[j]]
     #             d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
     #             s <- 1/(1 + d)
-    #             impactSocial[i, j] <- s
-    #             impactSocial[j, i] <- s
+    #             socialImpact[i, j] <- s
+    #             socialImpact[j, i] <- s
     #         }
     #     }
-    #     impactSocial
+    #     socialImpact
     # })
     
     impactSoc <- eventReactive(input$updateSocialRank, {
-        if (is.null(impactSocial)) {
+        if (is.null(socialImpact)) {
             impactSoc <- getImpactSocial()
             write_csv(data.frame(impactSoc), "social-impact.csv", col_names=F)
         } else {
-            impactSoc <- impactSocial
+            impactSoc <- socialImpact
         }
         impactSoc
     })
     
+    dendrogram <- reactive({
+        hclust(as.dist(1 - impactSoc()), method="complete")
+    })
+    
     output$actorDendrogram <- renderPlot({
-        # rownames(impactSocial) <- actorTable$Stakeholder
-        # if (is.na(impactSocial)) {
-        #     impactSocial <- impactSocial()
-        #     write_csv(data.frame(impactSocial), "social-impact.csv", col_names=F)
-        # }
-        hc <- hclust(as.dist(1 - impactSoc()), method="complete")
-        plot(hc, xlab="Actor ID")
+        # hc <- hclust(as.dist(1 - impactSoc()), method="complete")
+        # plot(hc, xlab="Actor ID")
+        plot(dendrogram(), xlab="Actor ID")
     })    
     
     # observeEvent(input$addSocialActor, {
@@ -227,7 +225,7 @@ shinyServer(function(input, output) {
     #     direct <- input$directInput
     #     indirect <- input$indirectInput
     #     
-    #     r$actorTable <- r$actorTable %>%
+    #     r$equityImpact <- r$equityImpact %>%
     #         rbind(data.frame(
     #             Actor = actor, 
     #             X1 = bau, 
@@ -246,7 +244,7 @@ shinyServer(function(input, output) {
     
     # Get ranking
     getActorImpact <- function(i, weight=T) {
-        prefs <- r$actorTable[i,] %>%
+        prefs <- r$equityImpact[i,] %>%
             select(-ID, -Stakeholder)
         
         prefs <- sapply(prefs, function(i) linguisticOrder[[i]])
@@ -277,6 +275,18 @@ shinyServer(function(input, output) {
         add(lapply(1:nrow(r$stakeholders), getActorImpact, weight=FALSE))
     })
     
+    socialRankText <- eventReactive(input$updateSocialRank,{
+        "Social ranking with Interest/Stake as weights:"
+    })
+    
+    observeEvent(input$updateSocialRank, {
+        shinyjs::show("dendrogramGroups")
+    })
+    
+    output$socialRankText <- renderText({
+        socialRankText()
+    })
+    
     output$socialRank <- renderTable({
         E <- E()
         -E %>%
@@ -287,6 +297,14 @@ shinyServer(function(input, output) {
             data.frame %>%
             t
     })
+    
+    socialRank_noWeightText <- eventReactive(input$updateSocialRank,{
+        "Social ranking with no weights:"
+    })    
+    
+    output$socialRank_noWeightText <- renderText({
+        socialRank_noWeightText()
+    })    
     
     output$socialRank_noWeight <- renderTable({
         E2 <- E2()
@@ -386,6 +404,60 @@ shinyServer(function(input, output) {
     observeEvent(input$stakeholderTable_cell_edit, {
         info <- input$stakeholderTable_cell_edit
         r$stakeholders[info$row, (info$col+1)] <- as.numeric(info$value)
+    })
+    
+    g <- reactiveVal()
+    groups <- reactiveVal()
+    groupText <- reactiveVal()
+    
+    observeEvent(input[["keyPressed"]], {
+        g(input$dendrogramGroups)
+        groups(cutree(dendrogram(), k = input$dendrogramGroups))
+    })
+    
+    output$groupText <- renderUI({
+        groups <- groups()
+        n <- g()
+        if (length(n) > 0) {
+            groupings <- c()
+            for (g in 1:n) {
+                curGroup <- paste(which(groups == g), collapse=', ')
+                curGroup <- paste0("Group ", g, ": ", curGroup)
+                groupings <- c(groupings, curGroup)
+            }
+            HTML(paste(groupings, collapse='<br/>'))
+        }
+    })
+    
+    output$socialRank_groups <- renderTable({
+        n <- g()
+        groups <- groups()
+        
+        if (length(n) > 0) {
+            groupTable <- data.frame()
+    
+            for (g in 1:n) {
+                curActors <- which(groups == g)
+                if (length(curActors) == 1) {
+                    groupTable <- groupTable %>%
+                        rbind(r$equityImpact[curActors,] %>%
+                                  select(-ID, -Stakeholder))
+                } else {
+                    curGroup <- add(lapply(curActors, getActorImpact))
+                    groupTable <- groupTable %>%
+                        rbind(-curGroup %>%
+                                  t %>%
+                                  colSums %>%
+                                  rank %>%
+                                  as.factor %>%
+                                  data.frame %>%
+                                  t)
+                }
+            }
+    
+            data.frame(Group = 1:n) %>%
+                cbind(groupTable)
+        }
     })
 
 })
