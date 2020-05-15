@@ -15,11 +15,11 @@ rm(required_packages)
 rm(uninstalled_packages)
 
 # Data set
-data <- read.csv("coalitions.csv", colClasses=c(rep('numeric', 4), 'factor'))
+data <- read.csv("coalitions.csv", colClasses=c(rep('numeric', 5), 'factor'))
 
 # Plot
 ggparcoord(data,
-    columns = 1:4, groupColumn = 5, order = "allClass",
+    columns = 1:5, groupColumn = 6, order = "allClass",
     scale="globalminmax",
     showPoints = TRUE, 
     title = "Ranking by coalitions",
