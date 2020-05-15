@@ -19,16 +19,18 @@ data <- read.csv("coalitions.csv", colClasses=c(rep('numeric', 5), 'factor'))
 
 # Plot
 ggparcoord(data,
-    columns = 1:5, groupColumn = 6, order = "allClass",
+    columns = 1:5, groupColumn = 6,
     scale="globalminmax",
     showPoints = TRUE, 
     title = "Ranking by coalitions",
     alphaLines = 1
     ) + 
   scale_color_viridis(discrete=TRUE) +
+  scale_y_continuous(breaks = seq(1, 8, 1), limits = c(1, 8)) +
   theme_ipsum()+
   theme(
     plot.title = element_text(size=10),
     axis.title.x= element_blank(),
-    axis.title.y= element_blank()
+    axis.title.y= element_blank(),
+    panel.grid.minor = element_blank()
   )
