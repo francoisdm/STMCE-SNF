@@ -118,18 +118,18 @@ shinyServer(function(input, output) {
         prefs <- r$equityImpact[i,] %>%
             select(-ID, -Stakeholder)
         
-        prefs <- sapply(prefs, function(i) linguisticOrder[[i]])
+        prefs <- sapply(prefs, function(j) linguisticOrder[[j]])
         
         d <- nrow(alternatives)
         E <- data.frame(matrix(nrow = d, 
                                ncol = d,
                                dimnames = list(alternatives$Option, alternatives$Option)))
-        for (i in 1:length(prefs)) {
-            curPref <- prefs[[names(prefs)[i]]]
+        for (j in 1:length(prefs)) {
+            curPref <- prefs[[names(prefs)[j]]]
             p <- ifelse(curPref > prefs, 1,
                         ifelse(curPref == prefs, 0.5, 0))
-            E[i,] <- p
-            E[i,i] <- 0
+            E[j,] <- p
+            E[j,j] <- 0
         }
         if (weight) {
             E*r$stakeholders$weight[i]
