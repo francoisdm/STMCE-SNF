@@ -296,7 +296,8 @@ semanticDist <- function(a, b) {
       aDF$lower < bDF$lower & aDF$upper > bDF$lower) {
     n <- 1000
     dist <- sapply(1:n, function(i) abs(sampleX(aDF) - sampleX(bDF)))
-    mean(dist)
+    sqrt(sum(dist^2))/n
+    # mean(dist)
   } else {
     ex <- integrate(function(x) x*aDF$k*mu(x, aDF$stdDev, aDF$med), 
                     lower=aDF$lower, upper=aDF$upper)$value
