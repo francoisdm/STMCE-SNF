@@ -15,14 +15,14 @@ rm(required_packages)
 rm(uninstalled_packages)
 
 # Data set
-data <- read.csv("gaps.csv", colClasses=c(rep('numeric', 4), 'factor'))
+data <- read.csv("rankings-mce.csv", colClasses=c(rep('numeric', 4), 'factor'))
 
 # Plot
 ggparcoord(data,
     columns = 1:4, groupColumn = 5,
     scale="globalminmax",
     showPoints = TRUE, 
-    title = "Mean ranking from multi-criteria evaluations and social impact analysis",
+    title = "Mean rankings from multi-criteria evaluations",
     alphaLines = 1
     ) + 
   scale_color_viridis(discrete=TRUE) +
