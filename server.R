@@ -4,7 +4,7 @@ shinyServer(function(input, output) {
     output$criteria1 <- DT::renderDataTable({
         DT::datatable(
             criteria[[1]] %>% 
-                dplyr::select(Category, Criterion),
+                dplyr::select(Dimension, Criterion),
             rownames=F,
             options= list(pageLength=10)
         )
@@ -13,7 +13,7 @@ shinyServer(function(input, output) {
     output$criteria2 <- DT::renderDataTable({
         DT::datatable(
             criteria[[2]] %>% 
-                dplyr::select(Category, Criterion),
+                dplyr::select(Dimension, Criterion),
             rownames=F,
             options= list(pageLength=10)            
         )
@@ -22,7 +22,7 @@ shinyServer(function(input, output) {
     output$criteria3 <- DT::renderDataTable({
         DT::datatable(
             criteria[[3]] %>% 
-                dplyr::select(Category, Criterion),
+                dplyr::select(Dimension, Criterion),
             rownames=F,
             options= list(pageLength=10)            
         )

@@ -127,16 +127,30 @@ getCriteria <- function(i) {
   
   crit <- readxl::read_excel(params$filename[i], 
                              range = params$range[i]) %>%
-    dplyr::select(Category:Direction, 
+    dplyr::select(Dimension:Direction, 
                   Threshold=`Indifference threshold`, 
                   Correlation,
                   Binary) %>%
-    tidyr::fill(Category) %>%
+    tidyr::fill(Dimension) %>%
     dplyr::mutate(weight = 1/n()) %>%
     dplyr::rename(CriterionID=ID)
   crit <- crit %>%
-    dplyr::mutate(CategoryID = dplyr::group_indices(crit, Category)) %>%
-    dplyr::select(CategoryID, everything())
+    dplyr::mutate(DimensionID = dplyr::group_indices(crit, Dimension)) %>%
+    dplyr::select(DimensionID, everything())  
+  
+  
+  crit <- readxl::read_excel(params$filename[i], 
+                             range = params$range[i]) %>%
+    dplyr::select(Dimension:Direction, 
+                  Threshold=`Indifference threshold`, 
+                  Correlation,
+                  Binary) %>%
+    tidyr::fill(Dimension) %>%
+    dplyr::mutate(weight = 1/n()) %>%
+    dplyr::rename(CriterionID=ID)
+  crit <- crit %>%
+    dplyr::mutate(DimensionID = dplyr::group_indices(crit, Dimension)) %>%
+    dplyr::select(DimensionID, everything())
   
   # Check for odd representations of cells when reading into R
   crit$Correlation <- sapply(
@@ -174,7 +188,7 @@ getImpactMatrix <- function(i) {
   # Stack the rows of criterion measures for each alternative.
   do.call("rbind", impact_mat) %>%
     dplyr::mutate(stdDev = max(0, (max - min)/6)) %>%
-    dplyr::select(-CategoryID, -Category)
+    dplyr::select(-DimensionID, -Dimension)
 }
 
 getEvalMatSoc <- function() {

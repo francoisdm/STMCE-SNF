@@ -35,6 +35,7 @@ params <- readr::read_csv(file="parameters.txt",
 N <- nrow(params)
 # Cell range
 parsed_ranges <- lapply(1:N, parseRange)
+CELL_RANGE <- c(LETTERS, paste0("A", LETTERS))
 
 # Alternatives
 alternatives <- readxl::read_excel(
@@ -54,8 +55,7 @@ criteria <- lapply(1:N, getCriteria)
 
 # Impact matrix
 # Used to identify the cell columns to read
-START_IDX <- sapply(1:N, function(i) ncol(criteria[[i]]) - 4)
-CELL_RANGE <- c(LETTERS, paste0("A", LETTERS))
+START_IDX <- sapply(1:N, function(i) ncol(criteria[[i]]) - 1)
 impact_mat <- lapply(1:N, getImpactMatrix)
 
 # Simulations
