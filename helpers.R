@@ -125,8 +125,8 @@ getCriteria <- function(i) {
   # Returns:
   # Data frame containing relevant criteria.
   
-  crit <- readxl::read_excel(parameters$filename[i], 
-                             range = parameters$range[i]) %>%
+  crit <- readxl::read_excel(params$filename[i], 
+                             range = params$range[i]) %>%
     dplyr::select(Category:Direction, 
                   Threshold=`Indifference threshold`, 
                   Correlation,
@@ -155,7 +155,7 @@ getImpactMatrix <- function(i) {
   # A data frame representation of the impact matrix for a given sheet.
   
   curLetter <- START_IDX[i]
-  curRange <- parsedRange[[i]]
+  curRange <- parsed_ranges[[i]]
   
   impact_mat <- list()
   # Read-in the criterion measures for each alternative
@@ -166,7 +166,7 @@ getImpactMatrix <- function(i) {
     
     impact_mat[[a]] <- data.frame(OptionID = alternatives$OptionID[a]) %>%
       cbind(criteria[[i]]) %>%
-      cbind(readxl::read_excel(path = parameters$filename[i],
+      cbind(readxl::read_excel(path = params$filename[i],
                                range = range))
     curLetter <- curLetter + 3
   }
@@ -177,7 +177,7 @@ getImpactMatrix <- function(i) {
     dplyr::select(-CategoryID, -Category)
 }
 
-getSocialImpact <- function() {
+getEvalMatSoc <- function() {
   # Creates a social impact matrix for the given stakeholders
   # based on their alternative preferences.
   #
@@ -186,12 +186,12 @@ getSocialImpact <- function() {
   # between stakeholder i and j with respect to their alternative
   # preferences.
   
-  n_stakeholders <- nrow(equityImpact)
-  shPrefs <- equityImpact %>%
+  n_stakeholders <- nrow(socialImpact)
+  shPrefs <- socialImpact %>%
     dplyr::select(-ID, -Stakeholder) %>%
     split(seq(n_stakeholders))
   
-  socImpact <- matrix(nrow = n_stakeholders, ncol = n_stakeholders)
+  ems <- matrix(nrow = n_stakeholders, ncol = n_stakeholders)
   # Get pairwise similarities
   for (i in 1:n_stakeholders) {
     for (j in i:n_stakeholders) {
@@ -199,8 +199,8 @@ getSocialImpact <- function() {
       b <- shPrefs[[j]]
       d <- sum(sapply(1:nrow(alternatives), function(i) semanticDist(a[[i]], b[[i]])))
       s <- 1/(1 + d)
-      socImpact[i, j] <- s
-      socImpact[j, i] <- s
+      ems[i, j] <- s
+      ems[j, i] <- s
     }
   }
   socImpact
@@ -246,10 +246,10 @@ parseRange <- function(i) {
   # element is a vector of length two containing the row number
   # range to read.
   
-  letterRange <- gsub("[^a-zA-Z]", " ", parameters$range[i]) %>%
+  letterRange <- gsub("[^a-zA-Z]", " ", params$range[i]) %>%
     strsplit(split=" ") %>%
     unlist
-  numRange <- gsub("[^0-9]", " ", parameters$range[i]) %>%
+  numRange <- gsub("[^0-9]", " ", params$range[i]) %>%
     strsplit(split=" ") %>%
     unlist
   

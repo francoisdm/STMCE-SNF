@@ -16,7 +16,7 @@ stdResText <- paste("Using the mean values for all the criterion measures",
                     "we obtain the following ranking:")
 mcResText <- paste("To measure the robustness of the results above,",
                    "we sampled the values of our impact matrix",
-                   parameters$n_sample, "times:")
+                   params$n_sample, "times:")
 # Text used in the stakeholder tab.
 analysisText <- paste("Pressing the button below will generate a dendrogram of stakeholders",
                       "according to their alternative preferences. It will also generate",
@@ -35,7 +35,17 @@ shinyUI(fluidPage(
 
     tabsetPanel(
       tabPanel(
-        parameters$tabname[1],
+        "Background",
+        includeMarkdown("background.md")
+      ),
+      
+      tabPanel(
+        "Method",
+        includeMarkdown("method.md")
+      ),
+      
+      tabPanel(
+        params$tabname[1],
         br(),
         p(criteriaText),
         br(),
@@ -51,7 +61,7 @@ shinyUI(fluidPage(
       ),
         
       tabPanel(
-        parameters$tabname[2],
+        params$tabname[2],
         br(),
         p(criteriaText),
         br(),
@@ -67,7 +77,7 @@ shinyUI(fluidPage(
       ),
       
       tabPanel(
-        parameters$tabname[3],
+        params$tabname[3],
         br(),
         p(criteriaText),
         br(),
