@@ -30,9 +30,7 @@ rm(uninstalled_packages)
 # ====== Multi-criteria analysis ======
 # Parameters
 params <- readr::read_csv(file="parameters.txt",
-                              col_names=c("filename", "n_sample", "tabname"))
-params$range <- sapply(params$filename,
-                       function(file) readxl::read_excel(file, range="D1:D1", col_names=F)[[1]])
+                              col_names=c("filename", "range", "n_sample", "tabname"))
 # Number of multi-criteria analyses
 N <- nrow(params)
 # Cell range
