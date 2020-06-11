@@ -160,7 +160,7 @@ shinyServer(function(input, output) {
         -E %>%
             t %>%
             colSums %>%
-            rank %>%
+            rank(ties.method = c("min")) %>%
             as.factor %>%
             data.frame %>%
             t
@@ -171,7 +171,7 @@ shinyServer(function(input, output) {
         -E2 %>%
             t %>%
             colSums %>%
-            rank %>%
+            rank(ties.method = c("min")) %>%
             as.factor %>%
             data.frame %>%
             t
@@ -245,25 +245,16 @@ shinyServer(function(input, output) {
                 #         rbind(socialImpact[curActors,] %>%
                 #                   select(-ID, -Stakeholder))
                 # } else {
-                #     curGroup <- add(lapply(curActors, getActorImpact))
-                #     groupTable <- groupTable %>%
-                #         rbind(-curGroup %>%
-                #                   t %>%
-                #                   colSums %>%
-                #                   rank %>%
-                #                   as.factor %>%
-                #                   data.frame %>%
-                #                   t)
-                # }
                 curGroup <- add(lapply(curActors, getActorImpact))
                 groupTable <- groupTable %>%
                     rbind(-curGroup %>%
                               t %>%
                               colSums %>%
-                              rank %>%
+                              rank(ties.method = c("min")) %>%
                               as.factor %>%
                               data.frame %>%
                               t)
+                # }
             }
     
             data.frame(Group = 1:n) %>%

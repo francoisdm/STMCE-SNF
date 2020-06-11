@@ -31,6 +31,7 @@ rm(uninstalled_packages)
 # Parameters
 params <- readr::read_csv(file="parameters.txt",
                               col_names=c("filename", "range", "n_sample", "tabname"))
+stopifnot(params$n_sample > 0 & params$n_sample <= 10000)
 # Number of multi-criteria analyses
 N <- nrow(params)
 # Cell range
@@ -107,7 +108,9 @@ if (!is.null(eval_mat_soc)) {
 
 # Constants to set up analysis on linguistic variables
 lv_opt <- c("Very bad", "Bad", "More or less bad", "Moderate",
-            "More or less good", "Good", "Very good")
+            "More or less good", "Good", "Very good",
+            "Very low", "Low", "Moderately low", "Average",
+            "Moderately high", "High", "Very high")
 lv_order <- list(
   "Very bad" = 1,
   "Bad" = 2,
@@ -115,13 +118,20 @@ lv_order <- list(
   "Moderate" = 4,
   "More or less good" = 5,
   "Good" = 6,
-  "Very good" = 7
+  "Very good" = 7,
+  "Very low" = 1,
+  "Low" = 2,
+  "Moderately low" = 3,
+  "Average" = 4,
+  "Moderately high" = 5,
+  "High" = 6,
+  "Very high" = 7
 )
 # Data frame containing all relevant information for the membership curves
 # for each linguistic variable.
 lv_params <- data.frame(name = lv_opt,
-                       stdDev = c(1/10, 1/7, 1/5, 1/7, 1/5, 1/7, 1/10),
-                       med = c(0, 0.2, 0.3, 0.5, 0.7, 0.8, 1)) %>%
+                       stdDev = rep(c(1/10, 1/7, 1/5, 1/7, 1/5, 1/7, 1/10), 2),
+                       med = rep(c(0, 0.2, 0.3, 0.5, 0.7, 0.8, 1), 2)) %>%
   mutate(lower = med - stdDev,
          lower = ifelse(lower < 0, 0, lower),
          upper = med + stdDev,
