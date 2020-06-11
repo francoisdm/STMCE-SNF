@@ -1,3 +1,4 @@
-input-TECH-v2.xlsx,A3:AF14,500,Technical_view
-input-SOC-v2.xlsx,A3:AF14,500,Societal_view
-input-FULL-v2.xlsx,A3:AF25,500,Combined
+input-TECH-v2.xlsx,A3:AF14,Technical_view,500
+input-SOC-v2.xlsx,A3:AF14,Societal_view,500
+input-FULL-v2.xlsx,A3:AF25,Combined,500
+social-impact.xlsx,A3:J23,Stakeholders

@@ -1,4 +1,4 @@
-if(!exists("alternatives")) source("intro.R")
+if(!exists("eval_mat_soc")) source("intro.R")
 
 # Necessary script to keep track of when the return button
 # is pressed.
@@ -45,7 +45,7 @@ shinyUI(fluidPage(
       ),
       
       tabPanel(
-        params$tabname[1],
+        ifelse(is.na(params$tabname[1]), "MCE1", params$tabname[1]),
         br(),
         p(criteriaText),
         br(),
@@ -61,7 +61,7 @@ shinyUI(fluidPage(
       ),
         
       tabPanel(
-        params$tabname[2],
+        ifelse(is.na(params$tabname[2]), "MCE2", params$tabname[2]),
         br(),
         p(criteriaText),
         br(),
@@ -77,7 +77,7 @@ shinyUI(fluidPage(
       ),
       
       tabPanel(
-        params$tabname[3],
+        ifelse(is.na(params$tabname[3]), "MCE3", params$tabname[3]),
         br(),
         p(criteriaText),
         br(),
@@ -93,7 +93,7 @@ shinyUI(fluidPage(
       ),
                
       tabPanel(
-        "Stakeholders",
+        params_sia$tabname,
         br(),
         DT::dataTableOutput("shTable"),
         br(),

@@ -2,6 +2,7 @@
 # This file contains all the functions that are used in the app.
 # The functions are sorted alphabetically.
 
+
 # Helper function to aggregate social ranking scores
 add <- function(x) Reduce("+", x)
 
@@ -47,12 +48,12 @@ adjustValues <- function(values, impact_mat) {
                                          dplyr::inner_join(corrDF, by="CriterionID"))
       
       netChange <- correlations %>%
-        dplyr::mutate(change = getDist(values, mean, min, max)) %>%
+        dplyr::mutate(change = getDist(values, as.numeric(mean), min, max)) %>%
         .$change
       netChange <- sum(netChange * correlations$inverse)
       values[i] <- ifelse(netChange < 0,
-                          values[i] - netChange * abs(impact_mat$mean[i] - impact_mat$min[i]),
-                          values[i] + netChange * abs(impact_mat$mean[i] - impact_mat$max[i]))
+                          values[i] - netChange * abs(as.numeric(impact_mat$mean)[i] - impact_mat$min[i]),
+                          values[i] + netChange * abs(as.numeric(impact_mat$mean)[i] - impact_mat$max[i]))
     }
   }
   
@@ -187,7 +188,7 @@ getImpactMatrix <- function(i) {
   
   # Stack the rows of criterion measures for each alternative.
   do.call("rbind", impact_mat) %>%
-    dplyr::mutate(stdDev = max(0, (max - min)/6)) %>%
+    dplyr::mutate(stdDev = ifelse(is.na(max), NA, abs(max - min)/6)) %>%
     dplyr::select(-DimensionID, -Dimension)
 }
 
@@ -349,20 +350,26 @@ simulateMC <- function(n, impact_mat, crit, mean = F, corr = T) {
                            dimnames=list(NULL, colnamesHV))
   
   for (i in 1:n) {
+    print(i)
     if (mean) {
-      Value <- impact_mat$mean
+      Value <- sapply(1:nrow(impact_mat),
+                      function(j) ifelse(grepl("\\d", impact_mat$mean[j]),
+                                         as.numeric(impact_mat$mean[j]),
+                                         lv_order[[impact_mat$mean[j]]]))
     } else {
       Value <- sapply(1:nrow(impact_mat), 
-                      function(i) rnorm(1, mean = impact_mat$mean[i], sd = impact_mat$stdDev[i]))
+                      function(j) ifelse(grepl("\\d", impact_mat$mean[j]),
+                                         rnorm(1, mean = as.numeric(impact_mat$mean[j]), sd = impact_mat$stdDev[j]),
+                                         lv_order[[impact_mat$mean[j]]]))
       
       Value <- ifelse(impact_mat$Binary,
                       ifelse(abs(Value - impact_mat$min) < abs(Value - impact_mat$max),
-                             ifelse(abs(Value - impact_mat$min) < abs(Value - impact_mat$mean),
+                             ifelse(abs(Value - impact_mat$min) < abs(Value - as.numeric(impact_mat$mean)),
                                     impact_mat$min,
-                                    impact_mat$mean),
-                             ifelse(abs(Value - impact_mat$max) < abs(Value - impact_mat$mean),
+                                    as.numeric(impact_mat$mean)),
+                             ifelse(abs(Value - impact_mat$max) < abs(Value - as.numeric(impact_mat$mean)),
                                     impact_mat$max,
-                                    impact_mat$mean)),
+                                    as.numeric(impact_mat$mean))),
                       Value)
       if (corr) {
         Value <- adjustValues(Value, impact_mat)

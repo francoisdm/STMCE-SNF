@@ -28,9 +28,47 @@ rm(uninstalled_packages)
 
 
 # ====== Multi-criteria analysis ======
+# Constants to set up analysis on linguistic variables
+lv_opt <- c("Very bad", "Bad", "More or less bad", "Moderate",
+            "More or less good", "Good", "Very good",
+            "Very low", "Low", "Moderately low", "Average",
+            "Moderately high", "High", "Very high")
+lv_order <- list(
+  "Very bad" = 1,
+  "Bad" = 2,
+  "More or less bad" = 3,
+  "Moderate" = 4,
+  "More or less good" = 5,
+  "Good" = 6,
+  "Very good" = 7,
+  "Very low" = 1,
+  "Low" = 2,
+  "Moderately low" = 3,
+  "Average" = 4,
+  "Moderately high" = 5,
+  "High" = 6,
+  "Very high" = 7
+)
+# Data frame containing all relevant information for the membership curves
+# for each linguistic variable.
+lv_params <- data.frame(name = lv_opt,
+                        stdDev = rep(c(1/10, 1/7, 1/5, 1/7, 1/5, 1/7, 1/10), 2),
+                        med = rep(c(0, 0.2, 0.3, 0.5, 0.7, 0.8, 1), 2)) %>%
+  mutate(lower = med - stdDev,
+         lower = ifelse(lower < 0, 0, lower),
+         upper = med + stdDev,
+         upper = ifelse(upper > 1, 1, upper))
+lv_params$k <- sapply(1:nrow(lv_params), 
+                      function(i) with(lv_params, 
+                                       1/integrate(mu, stdDev[i], med[i],
+                                                   lower = lower[i], 
+                                                   upper = upper[i])$value))
+
 # Parameters
 params <- readr::read_csv(file="parameters.txt",
-                              col_names=c("filename", "range", "n_sample", "tabname"))
+                          col_names=c("filename", "range", "tabname", "n_sample"))
+params_sia <- params[nrow(params),]
+params <- params[-nrow(params),]
 stopifnot(params$n_sample > 0 & params$n_sample <= 10000)
 # Number of multi-criteria analyses
 N <- nrow(params)
@@ -73,9 +111,9 @@ tryCatch(
 )
 # Cannot load existing MC results; generate new results and write to CSV.
 if (is.null(simulations)) {
-  simulations <- lapply(1:N, function(i) simulateMC(params$n_sample[i], 
+  simulations <- suppressWarnings(lapply(1:N, function(i) simulateMC(params$n_sample[i], 
                                                     impact_mat[[i]],
-                                                    criteria[[i]]))
+                                                    criteria[[i]])))
   for (i in 1:length(simulations)) {
     readr::write_csv(
       simulations[[i]]$ranking,
@@ -90,8 +128,8 @@ stakeholders <- readxl::read_excel(path = 'stakeholders.xlsx',
                                    range = 'A3:D23') %>%
   dplyr::rename(ID = `Stakeholder Abbreviation`)
 
-socialImpact <- readxl::read_excel(path = 'social-impact.xlsx',
-                                   range = 'A3:J23') %>%
+socialImpact <- readxl::read_excel(path = params_sia$filename,
+                                   range = params_sia$range) %>%
   dplyr::rename(Stakeholder = `Socio-economic actor`)
 
 
@@ -105,39 +143,3 @@ if (!is.null(eval_mat_soc)) {
   eval_mat_soc <- as.matrix(eval_mat_soc)
   colnames(eval_mat_soc) <- as.character(1:nrow(eval_mat_soc))
 }
-
-# Constants to set up analysis on linguistic variables
-lv_opt <- c("Very bad", "Bad", "More or less bad", "Moderate",
-            "More or less good", "Good", "Very good",
-            "Very low", "Low", "Moderately low", "Average",
-            "Moderately high", "High", "Very high")
-lv_order <- list(
-  "Very bad" = 1,
-  "Bad" = 2,
-  "More or less bad" = 3,
-  "Moderate" = 4,
-  "More or less good" = 5,
-  "Good" = 6,
-  "Very good" = 7,
-  "Very low" = 1,
-  "Low" = 2,
-  "Moderately low" = 3,
-  "Average" = 4,
-  "Moderately high" = 5,
-  "High" = 6,
-  "Very high" = 7
-)
-# Data frame containing all relevant information for the membership curves
-# for each linguistic variable.
-lv_params <- data.frame(name = lv_opt,
-                       stdDev = rep(c(1/10, 1/7, 1/5, 1/7, 1/5, 1/7, 1/10), 2),
-                       med = rep(c(0, 0.2, 0.3, 0.5, 0.7, 0.8, 1), 2)) %>%
-  mutate(lower = med - stdDev,
-         lower = ifelse(lower < 0, 0, lower),
-         upper = med + stdDev,
-         upper = ifelse(upper > 1, 1, upper))
-lv_params$k <- sapply(1:nrow(lv_params), 
-                     function(i) with(lv_params, 
-                                      1/integrate(mu, stdDev[i], med[i],
-                                                  lower = lower[i], 
-                                                  upper = upper[i])$value))
