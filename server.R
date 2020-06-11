@@ -227,24 +227,21 @@ shinyServer(function(input, output) {
                 curGroup <- paste0("Group ", g, ": ", curGroup)
                 groupings <- c(groupings, curGroup)
             }
+            groupings <- c(groupings, "Columns highlighted grey can be vetoed by some coalitions.")
             HTML(paste(groupings, collapse='<br/>'))
         }
     })
     
-    output$socialRank_groups <- renderTable({
+    output$socialRank_groups <- DT::renderDataTable({
         n <- g()
         groups <- groups()
+        veto <- c()
         
         if (length(n) > 0) {
             groupTable <- data.frame()
     
             for (g in 1:n) {
                 curActors <- which(groups == g)
-                # if (length(curActors) == 1) {
-                #     groupTable <- groupTable %>%
-                #         rbind(socialImpact[curActors,] %>%
-                #                   select(-ID, -Stakeholder))
-                # } else {
                 curGroup <- add(lapply(curActors, getActorImpact))
                 groupTable <- groupTable %>%
                     rbind(-curGroup %>%
@@ -254,11 +251,26 @@ shinyServer(function(input, output) {
                               as.factor %>%
                               data.frame %>%
                               t)
-                # }
+                vg <- floor(nrow(alternatives) * length(curActors) / length(groups)) - 1
+                if (vg > 0) {
+                    rawRank <- -curGroup %>%
+                        t %>%
+                        colSums %>%
+                        rank(ties.method = c("min")) %>%
+                        unname
+                    toVeto <- which(rawRank %in% sort(rawRank, decreasing=T)[1:vg])
+                    veto <- c(veto, toVeto)
+                }
             }
-    
-            data.frame(Group = 1:n) %>%
-                cbind(groupTable)
+            
+            DT::datatable(
+                data.frame(Group = 1:n) %>%
+                    cbind(groupTable),
+                rownames=F,
+                options= list(pageLength=10,
+                              dom='t')
+            ) %>%
+                DT::formatStyle(veto + 1,  backgroundColor = '#A9A9A9')
         }
     })
 

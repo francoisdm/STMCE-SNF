@@ -350,7 +350,6 @@ simulateMC <- function(n, impact_mat, crit, mean = F, corr = T) {
                            dimnames=list(NULL, colnamesHV))
   
   for (i in 1:n) {
-    print(i)
     if (mean) {
       Value <- sapply(1:nrow(impact_mat),
                       function(j) ifelse(grepl("\\d", impact_mat$mean[j]),
