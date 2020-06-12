@@ -102,9 +102,9 @@ simulations <- NULL
 # Check for existing MC results.
 tryCatch(
   {
-    filenames <- c(paste0("Technical_view_MC_results", params$n_sample[1], ".csv"),
-                   paste0("Societal_view_MC_results", params$n_sample[2], ".csv"),
-                   paste0("Combined_MC_results", params$n_sample[3], ".csv"))
+    filenames <- c(paste0("MCE_technical_MC_results", params$n_sample[1], ".csv"),
+                   paste0("MCE_societal_MC_results", params$n_sample[2], ".csv"),
+                   paste0("MCE_combined_MC_results", params$n_sample[3], ".csv"))
     simulations <- lapply(filenames, function(i) list(ranking=readr::read_csv(i)))
   },
   error=function(cond) {}
@@ -124,7 +124,7 @@ if (is.null(simulations)) {
 
 
 # ====== Stakeholders ======
-stakeholders <- readxl::read_excel(path = 'stakeholders.xlsx',
+stakeholders <- readxl::read_excel(path = 'stakeholder-weights.xlsx',
                                    range = 'A3:D23') %>%
   dplyr::rename(ID = `Stakeholder Abbreviation`)
 
