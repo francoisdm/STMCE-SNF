@@ -124,7 +124,7 @@ if (is.null(simulations)) {
 
 
 # ====== Stakeholders ======
-stakeholders <- readxl::read_excel(path = 'stakeholder-weights.xlsx',
+stakeholders <- readxl::read_excel(path = 'stakeholders.xlsx',
                                    range = 'A3:D23') %>%
   dplyr::rename(ID = `Stakeholder Abbreviation`)
 
