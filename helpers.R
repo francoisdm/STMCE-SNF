@@ -218,7 +218,7 @@ getEvalMatSoc <- function() {
       ems[j, i] <- s
     }
   }
-  socImpact
+  ems
 }
 
 mcBoxplot <- function(i) {
@@ -277,7 +277,7 @@ sampleX <- function(df) {
   # two linguistic variables. See section 6.3 of Munda (1995).
   #
   # Arguments:
-  # df (data.frame): one of the rows in the data frame lvParams
+  # df (data.frame): one of the rows in the data frame lv_params
   # Returns:
   # Numeric sampled value for x.
   
@@ -301,9 +301,9 @@ semanticDist <- function(a, b) {
   # Numeric value representing semantic distance between linguistic
   # variables a and b.
   
-  aDF <- lvParams %>%
+  aDF <- lv_params %>%
     filter(name == a)
-  bDF <- lvParams %>%
+  bDF <- lv_params %>%
     filter(name == b)
   
   # Check for overlap in domains

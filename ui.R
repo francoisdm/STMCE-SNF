@@ -112,6 +112,7 @@ shinyUI(fluidPage(
                     label="Enter number of groups in dendrogram to analyze:")
         ),
         htmlOutput("groupText"),
+        htmlOutput("vetoText"),
         DT::dataTableOutput("socialRank_groups")
         # tableOutput("socialRank_groups")
       )

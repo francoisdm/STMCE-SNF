@@ -211,6 +211,7 @@ shinyServer(function(input, output) {
     g <- reactiveVal()
     groups <- reactiveVal()
     groupText <- reactiveVal()
+    vetos <- reactiveVal()
     
     observeEvent(input[["keyPressed"]], {
         g(input$dendrogramGroups)
@@ -227,8 +228,7 @@ shinyServer(function(input, output) {
                 curGroup <- paste0("Group ", g, ": ", curGroup)
                 groupings <- c(groupings, curGroup)
             }
-            groupings <- c(groupings, "Columns highlighted grey can be vetoed by some coalitions.")
-            HTML(paste(groupings, collapse='<br/>'))
+            HTML(paste(c(groupings, '<br/>'), collapse='<br/>'))
         }
     })
     
@@ -236,6 +236,7 @@ shinyServer(function(input, output) {
         n <- g()
         groups <- groups()
         veto <- c()
+        vetoed_groups <- list()
         
         if (length(n) > 0) {
             groupTable <- data.frame()
@@ -260,9 +261,11 @@ shinyServer(function(input, output) {
                         unname
                     toVeto <- which(rawRank %in% sort(rawRank, decreasing=T)[1:vg])
                     veto <- c(veto, toVeto)
+                    vetoed_groups[[g]] <- colnames(curGroup)[toVeto]
                 }
             }
             
+            vetos(vetoed_groups)
             DT::datatable(
                 data.frame(Group = 1:n) %>%
                     cbind(groupTable),
@@ -273,5 +276,24 @@ shinyServer(function(input, output) {
                 DT::formatStyle(veto + 1,  backgroundColor = '#A9A9A9')
         }
     })
-
+    
+    output$vetoText <- renderUI({
+        vetos <- vetos()
+        if (is.null(vetos)) {
+            return()
+        }
+        if (length(n) > 0) {
+            veto_groups <- c("Each of the following groups can veto the following options:")
+            for (g in 1:length(vetos)) {
+                curGroup <- paste(vetos[[g]], collapse=', ')
+                curGroup <- gsub("\\.", " ", curGroup)
+                curGroup <- paste0("Group ", g, ": ", curGroup)
+                veto_groups <- c(veto_groups, curGroup)
+            }
+            veto_groups <- c(veto_groups, "Columns highlighted grey can be vetoed by some coalitions.")
+            HTML(paste(veto_groups, collapse='<br/>'))
+        }
+    })
 })
+    
+    
