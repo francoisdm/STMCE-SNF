@@ -188,7 +188,7 @@ getImpactMatrix <- function(i) {
   
   # Stack the rows of criterion measures for each alternative.
   do.call("rbind", impact_mat) %>%
-    dplyr::mutate(stdDev = ifelse(is.na(max), NA, abs(max - min)/6)) %>%
+    dplyr::mutate(stdDev = ifelse(is.na(max), NA, max(0, (max - min)/6))) %>%
     dplyr::select(-DimensionID, -Dimension)
 }
 
