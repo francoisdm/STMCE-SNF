@@ -29,7 +29,7 @@ rm(uninstalled_packages)
 
 # ====== Multi-criteria analysis ======
 # Constants to set up analysis on linguistic variables
-lv_opt <- c("Very bad", "Bad", "More or less bad", "Moderate",
+lv_opt <- c("Very bad", "Bad", "More or less bad", "Neutral",
             "More or less good", "Good", "Very good",
             "Very low", "Low", "Moderately low", "Average",
             "Moderately high", "High", "Very high")
@@ -37,7 +37,7 @@ lv_order <- list(
   "Very bad" = 1,
   "Bad" = 2,
   "More or less bad" = 3,
-  "Moderate" = 4,
+  "Neutral" = 4,
   "More or less good" = 5,
   "Good" = 6,
   "Very good" = 7,
@@ -125,7 +125,7 @@ if (is.null(simulations)) {
 
 # ====== Stakeholders ======
 stakeholders <- readxl::read_excel(path = 'stakeholders.xlsx',
-                                   range = 'A3:D23') %>%
+                                   range = 'A3:D12') %>%
   dplyr::rename(ID = `Stakeholder Abbreviation`)
 
 socialImpact <- readxl::read_excel(path = params_sia$filename,

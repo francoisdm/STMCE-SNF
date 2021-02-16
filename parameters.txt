@@ -1,4 +1,4 @@
-MCE-tech-v2.xlsx,A3:AF14,MCE_technical,500
-MCE-soc-v2.xlsx,A3:AF14,MCE_societal,500
-MCE-comb-v2.xlsx,A3:AF25,MCE_combined,500
-social-impact.xlsx,A3:J23,Social_impact
+MCE-tech-R1.xlsx,A3:W10,MCE_technical,500
+MCE-soc-R1.xlsx,A3:W10,MCE_societal,500
+MCE-comb-R1.xlsx,A3:W17,MCE_combined,500
+social-impact-R1.xlsx,A3:G12,Social_impact
